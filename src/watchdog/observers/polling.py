@@ -96,7 +96,9 @@ class PollingEmitter(EventEmitter):
                 new_snapshot = self._take_snapshot()
             except OSError:
                 self.queue_event(DirDeletedEvent(self.watch.path))
-                self.stop()
+                # stop commented to do not stop the thread if an 
+                # error happened (i.e. watch folder not accessible temporarily) 
+                #self.stop()
                 return
 
             events = DirectorySnapshotDiff(self._snapshot, new_snapshot)
