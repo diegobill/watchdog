@@ -95,9 +95,9 @@ class PollingEmitter(EventEmitter):
             try:
                 new_snapshot = self._take_snapshot()
             except OSError:
-                self.queue_event(DirDeletedEvent(self.watch.path))
                 # stop commented to do not stop the thread if an 
                 # error happened (i.e. watch folder not accessible temporarily) 
+                #self.queue_event(DirDeletedEvent(self.watch.path))
                 #self.stop()
                 return
 
