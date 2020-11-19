@@ -45,6 +45,8 @@ from watchdog.observers.api import (
     DEFAULT_OBSERVER_TIMEOUT,
     DEFAULT_EMITTER_TIMEOUT
 )
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 from watchdog.events import (
     DirMovedEvent,
@@ -78,7 +80,10 @@ class PollingEmitter(EventEmitter):
             self.watch.path, self.watch.is_recursive, stat=stat, listdir=listdir)
 
     def on_thread_start(self):
-        self._snapshot = self._take_snapshot()
+        try:
+            self._snapshot = self._take_snapshot()
+        except Exception as e:
+            logging.debug('on_thread_start _take_snapshot: %s' % e)
 
     def queue_events(self, timeout):
         # We don't want to hit the disk continuously.
@@ -94,7 +99,8 @@ class PollingEmitter(EventEmitter):
             # Update snapshot.
             try:
                 new_snapshot = self._take_snapshot()
-            except OSError:
+            except Exception as e: # OSError:
+                logging.debug('queue_events _take_snapshot: %s' % e)
                 # stop commented to do not stop the thread if an 
                 # error happened (i.e. watch folder not accessible temporarily) 
                 #self.queue_event(DirDeletedEvent(self.watch.path))
