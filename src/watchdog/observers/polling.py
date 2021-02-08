@@ -56,7 +56,8 @@ from watchdog.events import (
     FileMovedEvent,
     FileDeletedEvent,
     FileCreatedEvent,
-    FileModifiedEvent
+    FileModifiedEvent,
+    FileSystemErrorEvent
 )
 
 try:
@@ -103,11 +104,11 @@ class PollingEmitter(EventEmitter):
                 logging.debug('queue_events _take_snapshot: %s' % e)
                 # stop commented to do not stop the thread if an 
                 # error happened (i.e. watch folder not accessible temporarily) 
-                #self.queue_event(DirDeletedEvent(self.watch.path))
+                self.queue_event(FileSystemErrorEvent(self.watch.path, e))
                 #self.stop()
                 return
 
-            events = DirectorySnapshotDiff(self._snapshot, new_snapshot)
+            events = DirectorySnapshotDiff(self._snapshot if self._snapshot else new_snapshot, new_snapshot)
             self._snapshot = new_snapshot
 
             # Files.

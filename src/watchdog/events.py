@@ -97,7 +97,7 @@ EVENT_TYPE_MOVED = 'moved'
 EVENT_TYPE_DELETED = 'deleted'
 EVENT_TYPE_CREATED = 'created'
 EVENT_TYPE_MODIFIED = 'modified'
-
+EVENT_TYPE_ERROR = 'error'
 
 class FileSystemEvent(object):
     """
@@ -156,6 +156,36 @@ class FileSystemEvent(object):
 
     def __hash__(self):
         return hash(self.key)
+
+
+class FileSystemErrorEvent(FileSystemEvent):
+    """
+    File system event representing any kind of file system movement.
+    """
+
+    event_type = EVENT_TYPE_ERROR
+
+    def __init__(self, src_path, exception):
+        super(FileSystemErrorEvent, self).__init__(src_path)
+        self._exception = exception
+
+    @property
+    def exception(self):
+        return self._exception
+
+    # Used for hashing this as an immutable object.
+    @property
+    def key(self):
+        return (self.event_type, self.src_path, self.exception, self.is_directory)
+
+    def __repr__(self):
+        return ("<%(class_name)s: src_path=%(src_path)r, "
+                "error=%(exception)r, "
+                "is_directory=%(is_directory)s>"
+                ) % (dict(class_name=self.__class__.__name__,
+                          src_path=self.src_path,
+                          exception=self.exception,
+                          is_directory=self.is_directory))
 
 
 class FileSystemMovedEvent(FileSystemEvent):
@@ -333,6 +363,7 @@ class FileSystemEventHandler(object):
             EVENT_TYPE_DELETED: self.on_deleted,
             EVENT_TYPE_MODIFIED: self.on_modified,
             EVENT_TYPE_MOVED: self.on_moved,
+            EVENT_TYPE_ERROR: self.on_error,
         }[event.event_type](event)
 
     def on_any_event(self, event):
@@ -378,6 +409,15 @@ class FileSystemEventHandler(object):
             Event representing file/directory modification.
         :type event:
             :class:`DirModifiedEvent` or :class:`FileModifiedEvent`
+        """
+
+    def on_error(self, event):
+        """Called when a file or a directory trigger an error.
+
+        :param event:
+            Event representing file/directory error.
+        :type event:
+            :class:`FileSystemErrorEvent`
         """
 
 
